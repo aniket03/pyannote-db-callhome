@@ -3,7 +3,7 @@
 
 # The MIT License (MIT)
 
-# Copyright (c) 2017 CNRS
+# Copyright (c) 2018 CNRS
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -72,32 +72,26 @@ def parse_transcripts(f_path):
     return segments
 
 
-def create_mdtm_files(base_path, train_frac):
+def mdtm_helper(split, files):
+    fobj = open('./CallHome/data/callhome.{}.mdtm'.format(split), 'w')
+    temp_data = "{} 2 {} {} speaker NA unknown {}\n"
+    logging.info("{} size: {}".format(split, len(files)))
+    for f in files:
+        audio_f = os.path.split(f)[1].split('.')[0]
+        segs = pkl.load(open(f, 'rb'))
+        for i, seg in enumerate(segs[1:]):
+            start, duration = get_start_duration(seg[1], seg[2])
+            fobj.write(temp_data.format(audio_f, start, duration, audio_f + '_{}'.format(seg[0])))
+    fobj.close()
+
+
+def create_mdtm_files(base_path, train_frac, val_frac):
     files = list(list_files(base_path, lambda x: x.endswith("cha_pickle")))
     random.shuffle(files)
-    train_size = int(train_frac * len(files))
-
-    fobj = open('./CallHome/data/callhome.train.mdtm', 'w')
-    temp_data = "{} 2 {} {} speaker NA unknown {}\n"
-    logging.info("Train Size: {}".format(len(files[:train_size])))
-    for f in files[:train_size]:
-        audio_f = os.path.split(f)[1].split('.')[0]
-        segs = pkl.load(open(f, 'rb'))
-        for i, seg in enumerate(segs[1:]):
-            start, duration = get_start_duration(seg[1], seg[2])
-            fobj.write(temp_data.format(audio_f, start, duration, audio_f + '_{}'.format(seg[0])))
-    fobj.close()
-
-    fobj = open('./CallHome/data/callhome.validation.mdtm', 'w')
-    temp_data = "{} 2 {} {} speaker NA unknown {}\n"
-    logging.info("Test Size: {}".format(len(files[train_size:])))
-    for f in files[train_size:]:
-        audio_f = os.path.split(f)[1].split('.')[0]
-        segs = pkl.load(open(f, 'rb'))
-        for i, seg in enumerate(segs[1:]):
-            start, duration = get_start_duration(seg[1], seg[2])
-            fobj.write(temp_data.format(audio_f, start, duration, audio_f + '_{}'.format(seg[0])))
-    fobj.close()
+    n = len(files)
+    mdtm_helper("train", files[:int(train_frac * n)])
+    mdtm_helper("validation", files[int(train_frac * n):int((train_frac + val_frac) * n)])
+    mdtm_helper("test", files[int((train_frac + val_frac) * n):])
 
 
 if __name__ == '__main__':
@@ -106,7 +100,14 @@ if __name__ == '__main__':
     try:
         train_frac = float(sys.argv[2])
     except:
-        train_frac = 0.9
+        train_frac = 0.8
+
+    try:
+        val_frac = float(sys.argv[3])
+    except:
+        val_frac = 0.1
+
     for f_path in list_files(base_path, lambda x: x.endswith(".cha")):
-        segments = parse_transcripts(f_path)
-    create_mdtm_files(base_path, train_frac)
+        if os.path.exists(f_path.split('.')[0] + '.wav'):
+            segments = parse_transcripts(f_path)
+    create_mdtm_files(base_path, train_frac, val_frac)

@@ -3,7 +3,7 @@
 
 # The MIT License (MIT)
 #
-# Copyright (c) 2017 CNRS
+# Copyright (c) 2018 CNRS
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -48,6 +48,7 @@ setup(
     install_requires=[
         'pyannote.database >= 0.11.2',
         'pyannote.parser >= 0.6.5',
+        'pydub'
     ],
     classifiers=[
         "Development Status :: 4 - Beta",
