@@ -28,9 +28,11 @@
 
 
 import os.path as op
+
 from pyannote.database import Database
 from pyannote.database.protocol import SpeakerDiarizationProtocol
 from pyannote.parser.annotation.mdtm import MDTMParser
+from pyannote.parser.timeline.uem import UEMParser
 
 
 class CallHomeProtocol(SpeakerDiarizationProtocol):
@@ -39,34 +41,46 @@ class CallHomeProtocol(SpeakerDiarizationProtocol):
     def trn_iter(self):
         data_dir = op.join(op.dirname(op.realpath(__file__)), 'data')
         annotations = MDTMParser().read(op.join(data_dir, 'callhome.train.mdtm'))
+        uems = UEMParser().read(op.join(data_dir, 'callhome.train.uem'))
+
         for uri in sorted(annotations.uris):
             annotation = annotations(uri)
+            annotated = uems(uri)
             yield {
                 'database': 'CallHome',
                 'uri': uri,
                 'annotation': annotation,
+                'annotated': annotated
             }
 
     def dev_iter(self):
         data_dir = op.join(op.dirname(op.realpath(__file__)), 'data')
         annotations = MDTMParser().read(op.join(data_dir, 'callhome.validation.mdtm'))
+        uems = UEMParser().read(op.join(data_dir, 'callhome.validation.uem'))
+
         for uri in sorted(annotations.uris):
             annotation = annotations(uri)
+            annotated = uems(uri)
             yield {
                 'database': 'CallHome',
                 'uri': uri,
                 'annotation': annotation,
+                'annotated': annotated
             }
 
     def tst_iter(self):
         data_dir = op.join(op.dirname(op.realpath(__file__)), 'data')
         annotations = MDTMParser().read(op.join(data_dir, 'callhome.test.mdtm'))
+        uems = UEMParser().read(op.join(data_dir, 'callhome.test.uem'))
+
         for uri in sorted(annotations.uris):
             annotation = annotations(uri)
+            annotated = uems(uri)
             yield {
                 'database': 'CallHome',
                 'uri': uri,
                 'annotation': annotation,
+                'annotated': annotated
             }
 
 

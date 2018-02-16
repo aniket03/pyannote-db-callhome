@@ -90,16 +90,20 @@ def parse_transcripts(f_path):
 
 
 def mdtm_helper(split, files):
-    fobj = open('./CallHome/data/callhome.{}.mdtm'.format(split), 'w')
-    temp_data = "{} 2 {} {} speaker NA unknown {}\n"
+    mdtm_fobj = open('./CallHome/data/callhome.{}.mdtm'.format(split), 'w')
+    uem_fobj = open('./CallHome/data/callhome.{}.uem'.format(split), 'w')
+    mdtm_temp_data = "{} 1 {} {} speaker NA unknown {}\n"
+    uem_temp_data = "{} 1 {} {}\n"
     logging.info("{} size: {}".format(split, len(files)))
     for f in files:
         audio_f = os.path.split(f)[1].split('.')[0]
         segs = pkl.load(open(f, 'rb'))
-        for i, seg in enumerate(segs[1:]):
+        for i, seg in enumerate(segs):
             start, duration = get_start_duration(seg[1], seg[2])
-            fobj.write(temp_data.format(audio_f, start, duration, audio_f + '_{}'.format(seg[0])))
-    fobj.close()
+            mdtm_fobj.write(mdtm_temp_data.format(audio_f, start, duration, audio_f + '_{}'.format(seg[0])))
+        uem_fobj.write(uem_temp_data.format(audio_f, get_secs(segs[0][1]), get_secs(segs[-1][2])))
+    uem_fobj.close()
+    mdtm_fobj.close()
 
 
 def create_mdtm_files(base_path, train_frac, val_frac):
@@ -128,4 +132,3 @@ if __name__ == '__main__':
         if os.path.exists(f_path.split('.')[0] + '.wav'):
             segments = parse_transcripts(f_path)
     create_mdtm_files(base_path, train_frac, val_frac)
-

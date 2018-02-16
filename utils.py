@@ -45,6 +45,7 @@ def get_wav_files(base_path):
     for file in list_files(base_path, lambda x: x.endswith('.mp3')):
         logging.info(file)
         audio = AudioSegment.from_file(file)
+        audio = audio.set_channels(1)
         audio.export(os.path.join(os.path.dirname(file), os.path.basename(file).split(".")[0] + ".wav"), format="wav")
 
 
