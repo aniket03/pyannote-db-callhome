@@ -29,15 +29,13 @@
 
 from setuptools import setup, find_packages
 
-import versioneer
 
 setup(
     name='pyannote.db.callhome',
     description="CallHome plugin for pyannote-database",
     author='Venkatesh Duppada',
     author_email='venkatesh.duppada@seernet.io',
-    version=versioneer.get_version(),
-    cmdclass=versioneer.get_cmdclass(),
+    version="1.1.0",
     packages=find_packages(),
     package_data={
         'CallHome': [
@@ -46,8 +44,8 @@ setup(
     },
     include_package_data=True,
     install_requires=[
-        'pyannote.database >= 0.11.2',
-        'pyannote.parser >= 0.6.5',
+        'pyannote.database',
+        'pyannote.parser',
         'pydub'
     ],
     classifiers=[

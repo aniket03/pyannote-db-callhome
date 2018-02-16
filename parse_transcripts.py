@@ -68,7 +68,24 @@ def parse_transcripts(f_path):
             end = indexes.split("_")[1].strip()[:-1]
             if represent_int(start) and represent_int(end):
                 segments.append([id, int(start), int(end)])
-    pkl.dump(segments, open('{}_pickle'.format(f_path), 'wb'))
+
+    merged_segments = []
+    completed = []
+    for i in range(len(segments)):
+        if i in completed:
+            continue
+        curr_id = segments[i][0]
+        start = segments[i][1]
+        end = segments[i][2]
+        completed.append(i)
+        for j in range(i + 1, len(segments)):
+            if segments[j][0] != curr_id:
+                break
+            else:
+                completed.append(j)
+                end = segments[j][2]
+        merged_segments.append([curr_id, start, end])
+    pkl.dump(merged_segments, open('{}_pickle'.format(f_path), 'wb'))
     return segments
 
 
@@ -111,3 +128,4 @@ if __name__ == '__main__':
         if os.path.exists(f_path.split('.')[0] + '.wav'):
             segments = parse_transcripts(f_path)
     create_mdtm_files(base_path, train_frac, val_frac)
+

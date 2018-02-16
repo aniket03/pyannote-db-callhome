@@ -27,11 +27,6 @@
 # Venkatesh Duppada
 
 
-from ._version import get_versions
-
-__version__ = get_versions()['version']
-del get_versions
-
 import os.path as op
 from pyannote.database import Database
 from pyannote.database.protocol import SpeakerDiarizationProtocol

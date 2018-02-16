@@ -11,5 +11,5 @@ Download the CallHome dataset from [here](https://talkbank.org/access/CABank/Cal
 > python utils.py ~/Downloads/CABank_CallHome
 
 # Get the training, validation and test splits
-> python parse_transcripts.py ~/Downloads/CABank_CallHome 0.9 0.1
+> python parse_transcripts.py ~/Downloads/CABank_CallHome 0.8 0.1
 ```
