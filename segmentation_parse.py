@@ -27,12 +27,8 @@
 # ROYAL JAIN
 
 import logging
-import os
-import pickle as pkl
 import random
 import sys
-import audioread
-from utils import list_files
 
 random.seed(1729)
 
@@ -68,8 +64,6 @@ if __name__ == '__main__':
         if prev_uri != uri:
             prev_uri = uri
             init_str = 'A'
-
-        print(uri)
 
         cols = line.split(' ')
         cols[7] = init_str
