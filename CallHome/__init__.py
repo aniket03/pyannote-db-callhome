@@ -92,5 +92,5 @@ class CallHome(Database):
 
         if preprocessors is None:
             preprocessors = {}
-        self.register_protocol(
-            'SpeakerDiarization', 'CallHomeProtocol', CallHomeProtocol)
+        self.register_protocol('SpeakerDiarization', 'CallHomeProtocol', CallHomeProtocol)
+        self.register_protocol('SpeechDetection', 'CallHomeProtocol', CallHomeProtocol)

@@ -28,11 +28,8 @@
 
 import logging
 import os
-import pickle as pkl
 import random
 import sys
-
-from pydub import AudioSegment
 
 from utils import list_files
 
@@ -59,6 +56,7 @@ def get_start_duration(t1, t2):
 
 def parse_transcripts(f_path):
     lines = open(f_path, 'r').read().splitlines()
+    uri = os.path.split(f_path)[1].split('.')[0]
     segments = []
     for i, line in enumerate(lines):
         if line.startswith('*'):
@@ -69,79 +67,39 @@ def parse_transcripts(f_path):
             start = indexes.split("_")[0].strip()[1:]
             end = indexes.split("_")[1].strip()[:-1]
             if represent_int(start) and represent_int(end):
-                segments.append([id, int(start), int(end)])
-
-    merged_segments = []
-    completed = []
-    for i in range(len(segments)):
-        if i in completed:
-            continue
-        curr_id = segments[i][0]
-        start = segments[i][1]
-        end = segments[i][2]
-        completed.append(i)
-        for j in range(i + 1, len(segments)):
-            if segments[j][0] != curr_id:
-                break
-            else:
-                completed.append(j)
-                end = segments[j][2]
-        merged_segments.append([curr_id, start, end])
-
-    # add start, end offset by annotation start time
-    start_time = merged_segments[0][1]
-    for seg in merged_segments:
-        seg.append(seg[1] - start_time)
-        seg.append(seg[2] - start_time)
-
-    pkl.dump(merged_segments, open('{}_pickle'.format(f_path), 'wb'))
+                segments.append([uri, id, int(start), int(end)])
     return segments
 
 
-def mdtm_helper(split, files):
+def mdtm_helper(split, segments):
     mdtm_fobj = open('./CallHome/data/callhome.{}.mdtm'.format(split), 'w')
     uem_fobj = open('./CallHome/data/callhome.{}.uem'.format(split), 'w')
     mdtm_temp_data = "{} 1 {} {} speaker NA unknown {}\n"
     uem_temp_data = "{} 1 {} {}\n"
-    logging.info("{} size: {}".format(split, len(files)))
-    for f in files:
-        audio_f = os.path.split(f)[1].split('.')[0]
-        segs = pkl.load(open(f, 'rb'))
+    logging.info("{} size: {}".format(split, len(segments)))
+    for segs in segments:
         for i, seg in enumerate(segs):
-            start, duration = get_start_duration(seg[3], seg[4])
-            mdtm_fobj.write(mdtm_temp_data.format(
-                audio_f, start, duration, audio_f + '_{}'.format(seg[0])))
-        uem_fobj.write(uem_temp_data.format(
-            audio_f, get_secs(segs[0][3]), get_secs(segs[-1][4])))
+            start, duration = get_start_duration(seg[2], seg[3])
+            if duration < 0.01:
+                continue
+            mdtm_fobj.write(mdtm_temp_data.format(seg[0], start, duration, seg[0] + '_{}'.format(seg[1])))
+        uem_fobj.write(uem_temp_data.format(segs[0][0], get_secs(segs[0][2]), get_secs(segs[-1][3])))
     uem_fobj.close()
     mdtm_fobj.close()
 
 
 def create_mdtm_files(base_path, train_frac, val_frac):
-    files = list(list_files(base_path, lambda x: x.endswith("cha_pickle")))
-    random.shuffle(files)
-    n = len(files)
-    mdtm_helper("train", files[:int(train_frac * n)])
-    mdtm_helper("validation", files[int(
-        train_frac * n):int((train_frac + val_frac) * n)])
-    mdtm_helper("test", files[int((train_frac + val_frac) * n):])
-
-
-def generate_transcripts(base_path):
+    transcripts = []
     for f_path in list_files(base_path, lambda x: x.endswith(".cha")):
         if os.path.exists(f_path.split('.')[0] + '.wav'):
-            parse_transcripts(f_path)
+            transcripts.append(parse_transcripts(f_path))
 
+    random.shuffle(transcripts)
+    n = len(transcripts)
 
-def truncate_audio_files(base_path):
-    for f_path in list_files(base_path, lambda x: x.endswith(".cha_pickle")):
-        segments = pkl.load(open(f_path, 'rb'))
-        start, end = segments[0][1], segments[-1][2]
-        audio_path = f_path.split('.')[0] + '.wav'
-        if os.path.exists(audio_path):
-            logging.info("Truncating: {}".format(audio_path))
-            audio = AudioSegment.from_file(audio_path)
-            audio[start:end].export(audio_path, format='wav')
+    mdtm_helper("train", transcripts[:int(train_frac * n)])
+    mdtm_helper("validation", transcripts[int(train_frac * n):int((train_frac + val_frac) * n)])
+    mdtm_helper("test", transcripts[int((train_frac + val_frac) * n):])
 
 
 if __name__ == '__main__':
@@ -157,6 +115,4 @@ if __name__ == '__main__':
     except:
         val_frac = 0.1
 
-    generate_transcripts(base_path)
-    truncate_audio_files(base_path)
     create_mdtm_files(base_path, train_frac, val_frac)
