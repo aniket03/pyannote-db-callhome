@@ -35,7 +35,7 @@ setup(
     description="CallHome plugin for pyannote-database",
     author='Venkatesh Duppada',
     author_email='venkatesh.duppada@seernet.io',
-    version="1.1.0",
+    version="1.3.0",
     packages=find_packages(),
     package_data={
         'CallHome': [
